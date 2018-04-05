@@ -14,8 +14,7 @@ const (
 
 // ECSEnveloppe defines the JSON ECS enveloppe in the body
 type ECSEnveloppe struct {
-	Tasks     []ECSTask `json:"tasks"`
-	PrivateIP string
+	Tasks []ECSTask `json:"tasks"`
 }
 
 // ECSTask defines an ECSTask
@@ -37,7 +36,7 @@ type ECSContainer struct {
 	TaskName    string
 }
 
-// Print prints an ecs container
+// Print prints an ECSContainer
 func (c ECSContainer) Print() {
 	fmt.Println("docker container id: ", c.DockerCID)
 	fmt.Println("docker container name: ", c.DockerCName)
@@ -45,8 +44,8 @@ func (c ECSContainer) Print() {
 	fmt.Println("privateIP of running container: ", c.PrivateIP)
 }
 
-// CallECSAgent calls the metadata service to get the DockerCID
-func CallECSAgent(desiredStatus string, tasks []*string, privateIP *string) ([]*ECSContainer, error) {
+// callECSAgent calls the ECS agent metadata service to get the DockerCID
+func callECSAgent(desiredStatus string, tasks []*string, privateIP *string) ([]*ECSContainer, error) {
 	requestURL := fmt.Sprintf("%v://%v:%v/v1/tasks", protocol, *privateIP, port)
 
 	resp, err := http.Get(requestURL)

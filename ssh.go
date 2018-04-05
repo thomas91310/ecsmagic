@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -21,6 +20,15 @@ type SSHConf struct {
 	PrivateKeyPath string
 }
 
+// NewSSHConf creates a new SSHConf
+func NewSSHConf(username string, passwordKey string, privateKeyPath string) SSHConf {
+	return SSHConf{
+		Username:       username,
+		PasswordKey:    passwordKey,
+		PrivateKeyPath: privateKeyPath,
+	}
+}
+
 func publicKeyFile(passwordKey, file string) (ssh.AuthMethod, error) {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -31,6 +39,7 @@ func publicKeyFile(passwordKey, file string) (ssh.AuthMethod, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return ssh.PublicKeys(key), nil
 }
 
@@ -70,11 +79,11 @@ func sshIn(sshConf SSHConf, container *ECSContainer) error {
 	}
 
 	if err := session.RequestPty("vt100", 80, 40, modes); err != nil {
-		log.Fatalf("request for pseudo terminal failed: %v", err)
+		return fmt.Errorf("request for pseudo terminal failed: %v", err)
 	}
 
 	if err := session.Shell(); err != nil {
-		log.Fatalf("failed to start shell: %v", err)
+		return fmt.Errorf("failed to start shell: %v", err)
 	}
 
 	// Handle control + C
@@ -88,15 +97,14 @@ func sshIn(sshConf SSHConf, container *ECSContainer) error {
 	}()
 
 	time.Sleep(1 * time.Second)
-	// cmd := fmt.Sprintf("sudo docker exec -it %v bash", container.DockerCID)
+	cmd := fmt.Sprintf("sudo docker exec -it %v bash", container.DockerCID)
 
-	// fmt.Fprintf(in, "")
-	// fmt.Fprintf(in, cmd)
-	// fmt.Fprintf(in, "\n")
+	fmt.Fprintf(in, cmd)
+	fmt.Fprintf(in, "\n")
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		str, _ := reader.ReadString('\n')
-		fmt.Fprintf(in, str)
+		cmd, _ := reader.ReadString('\n')
+		fmt.Fprintf(in, cmd)
 	}
 }
